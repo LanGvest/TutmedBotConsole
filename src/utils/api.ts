@@ -437,8 +437,9 @@ export default class Api {
 		return info;
 	}
 
-	private static buildAppointmentSystemInfoStamp({employee, attempt, date, time, patient}: MakeAnAppointmentProps, adminViberUid: Nullable<string>): string {
-		return ``
+	private static buildAppointmentSystemInfoStamp(props: MakeAnAppointmentProps, adminViberUid: Nullable<string>): string {
+		const info = Api.getAppointmentSystemInfo(props, adminViberUid);
+		return Object.keys(info).map(key => `*${key}:* ${info[key]}`).join("\n");
 	}
 
 	private static logAppointment(props: MakeAnAppointmentProps, adminViberUid: Nullable<string>): void {
@@ -447,7 +448,7 @@ export default class Api {
 
 	public static async makeAnAppointment(props: MakeAnAppointmentProps): Promise<boolean> {
 		if(Settings.DEBUG) DEBUG_LOGGER.warning("Запрос записи на приём не будет отправлен, так как активирован режим отладки. Все действия являются симуляцией.");
-		const {employee, attempt, notifyList, date, time, patient} = props;
+		const {employee, notifyList, date, time, patient} = props;
 		const method: string = "POST";
 		const endpoint: string = "cgi-bin/is11_62";
 		const data: string = `sfl_=${employee.institution.id}&ncod_=${employee.id}&ndat_=${date.id}&ntyp_=${date.type.id}&stim_=${time.id}&snum_=${patient.number}&spin_=${patient.pin}`;
@@ -488,7 +489,10 @@ export default class Api {
 				await Api.sendTextMessage({
 					viberUid: admin.viberUid,
 					message: (
-						`⚠️ Произошла неизвестная ошибка при попытке записи пациента на приём!`
+						`⚠️ Произошла неизвестная ошибка при попытке записи пациента на приём!\n\n`
+						+ Api.buildAppointmentSystemInfoStamp(props, adminViberUid) + "\n\n"
+						+ Api.buildBaseSystemInfoStamp() + "\n\n"
+						+ "*Ошибка:* " + JSON.stringify(e, null, 2)
 					)
 				});
 				API_LOGGER.info("Отчёт об ошибке был успешно отправлен администратору.");
@@ -517,7 +521,10 @@ export default class Api {
 				await Api.sendTextMessage({
 					viberUid: admin.viberUid,
 					message: (
-						"⚠️ Произошла неизвестная ошибка при попытке отправки пациенту уведомления о записи на приём!"
+						"⚠️ Произошла неизвестная ошибка при попытке отправки пациенту уведомления о записи на приём!\n\n"
+						+ Api.buildAppointmentSystemInfoStamp(props, adminViberUid) + "\n\n"
+						+ Api.buildBaseSystemInfoStamp() + "\n\n"
+						+ "*Ошибка:* " + JSON.stringify(e, null, 2)
 					)
 				});
 				API_LOGGER.info("Отчёт об ошибке был успешно отправлен администратору.");
@@ -548,7 +555,10 @@ export default class Api {
 				await Api.sendTextMessage({
 					viberUid: admin.viberUid,
 					message: (
-						"⚠️ Произошла неизвестная ошибка при попытке отправки наблюдателю уведомления с просьбой напоминания о записи на приём!"
+						"⚠️ Произошла неизвестная ошибка при попытке отправки наблюдателю уведомления с просьбой напоминания о записи на приём!\n\n"
+						+ Api.buildAppointmentSystemInfoStamp(props, adminViberUid) + "\n\n"
+						+ Api.buildBaseSystemInfoStamp() + "\n\n"
+						+ "*Ошибка:* " + JSON.stringify(e, null, 2)
 					)
 				});
 				API_LOGGER.info("Отчёт об ошибке был успешно отправлен администратору.");
